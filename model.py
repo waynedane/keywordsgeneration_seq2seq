@@ -139,7 +139,7 @@ class Attndecoder(nn.Module):
         extra_zeros = Variable(torch.zeros(b, self.extend_vocab_size-self.vocab_size))
         vocab_dists_extended = torch.cat([vocab_dists, extra_zeros], 1)
         renorm_attns = atten_re(attn_dist, Variable(words_padding_mask))
-        attn_dists_projected = Variable(torch.stack([torch.sparse.FloatTensor(i.unsqueeze(0), v, torch.Size([self.extend_vocab_size])).to_dense() for (i,v) in zip(data,renorm_attns.data)]))
+        attn_dists_projected = Variable(torch.stack([torch.sparse.FloatTensor(i.unsqueeze(0), v.data, torch.Size([self.extend_vocab_size])).to_dense() for (i,v) in zip(data,renorm_attns)]))
         attn_dists_projecteds = torch.stack([torch.mul(1-p_gen,attn_dists_projected) for (p_gen, attn_dists_projected) in zip(p_gens,attn_dists_projected)])
         final_output = F.softmax(vocab_dists_extended+attn_dists_projecteds, dim=1)
         return S_t, attn_dist, p_gens, final_output, vocab_dists_extended
