@@ -104,14 +104,23 @@ class AttnNN(nn.Module):
         
 
 class Attndecoder(nn.Module):
-    def __init__(self,  embedding_size, hidden_size, dropout_p=0.1):
+    def __init__(self,  embedding_size, hidden_size, vocab_size, extend_vocab_size, dropout_p=0.1):
         super(Attndecoder, self).__init__()
         self.hidden_size = hidden_size
+        self.vocab_size = vocab_size
+        self.extend_vocab_size = extend_vocab_size
         self.dropout_p = dropout_p
         self.embedding_size = embedding_size
         self.gru = nn.GRU(embedding_size, hidden_size, dropout=dropout_p)
+      
+        self.V1 = nn.Linear(hidden_size * 3, hidden_size * 2)
+        self.V2 = nn.Linear(hidden_size * 2, vocab_size)   
+        self.wh = nn.Linear(hidden_size*2 , 1)
+        self.ws = nn.Linear(hidden_size, 1)
+        self.wx = nn.Linear(embedding_size, 1)
+        
         self.attn = AttnNN(hidden_size)
-    def forward(self, target_input , hidden ,outputs_t, outputs_a,hidden_c):
+    def forward(self, data, target_input ,words_padding_mask, hidden ,outputs_t, outputs_a,hidden_c):
         l_t, b,_= outputs_t.size()  # get length_t &batch size
         l_a = outputs_a.size()[0]
         S_t, hidden = self.gru(target_input, hidden)
@@ -124,8 +133,17 @@ class Attndecoder(nn.Module):
         attn_weights_t = torch.mul(weight_1, attn_weights_t)
         attn_weights_a = torch.mul(weight_2, attn_weights_a)
         attn_dist = torch.cat((attn_weights_t, attn_weights_a),1)
-        
-        return S_t, attn_dist
+        p_gens = F.sigmoid(self.wh(context) + self.ws(S_t.squeeze()) + self.wx(target_input.squeeze()))
+        vocab_dists = F.softmax(self.V2(self.V1(torch.cat([S_t.squeeze(), context], 1))),1)
+        vocab_dists = torch.stack([torch.mul(p_gen,dist) for (p_gen, dist) in zip(p_gens,vocab_dists)])
+        extra_zeros = Variable(torch.zeros(b, self.extend_vocab_size-self.vocab_size))
+        vocab_dists_extended = torch.cat([vocab_dists, extra_zeros], 1)
+        renorm_attns = atten_re(attn_dist, Variable(words_padding_mask))
+        attn_dists_projected = Variable(torch.stack([torch.sparse.FloatTensor(i.unsqueeze(0), v, torch.Size([self.extend_vocab_size])).to_dense() for (i,v) in zip(data,renorm_attns.data)]))
+        attn_dists_projecteds = torch.stack([torch.mul(1-p_gen,attn_dists_projected) for (p_gen, attn_dists_projected) in zip(p_gens,attn_dists_projected)])
+        final_output = F.softmax(vocab_dists_extended+attn_dists_projecteds, dim=1)
+        return S_t, attn_dist, p_gens, final_output, vocab_dists_extended
     def init_hidden(self):
-        hidden_c = Variable(torch.zeros(2,5,self.hidden_size )).cuda()
+        hidden_c = Variable(torch.zeros(2,5,self.hidden_size ))
         return hidden_c
+
