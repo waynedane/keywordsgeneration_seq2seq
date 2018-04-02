@@ -35,8 +35,8 @@ class EncoderRNN(nn.Module):
         s_0 = self.v_c(self.w_t(output_t[-1])+self.w_a(output_a[-1]))  #[batch x dense]
         return output_t, output_a, output_t[-1].unsqueeze(0), output_a[-1].unsqueeze(0), s_0
     def init_hidden(self):
-        hidden_t = Variable(torch.zeros(2, self.batch_size, self.hidden_size))  # 初始化隐层参数
-        hidden_a = Variable(torch.zeros(2, self.batch_size, self.hidden_size))
+        hidden_t = Variable(torch.zeros(2, self.batch_size, self.hidden_size)).cuda()  # 初始化隐层参数
+        hidden_a = Variable(torch.zeros(2, self.batch_size, self.hidden_size)).cuda()
         return hidden_t, hidden_a
     
 class AttnNN(nn.Module):
@@ -60,8 +60,8 @@ class AttnNN(nn.Module):
         seq_len_t = len(outputs_t) # obtain  sequence length of title
         seq_len_a = len(outputs_a) # obtain  sequence length of abstract
 
-        attn_energies_t = Variable(torch.zeros(seq_len_t, b))
-        attn_energies_a = Variable(torch.zeros(seq_len_a, b))
+        attn_energies_t = Variable(torch.zeros(seq_len_t, b)).cuda()
+        attn_energies_a = Variable(torch.zeros(seq_len_a, b)).cuda()
         
 
         for i in range(seq_len_t):
@@ -86,7 +86,7 @@ class AttnNN(nn.Module):
         context_a = context_a.squeeze() #[b x dense*2]
         
     
-        attn_energies = Variable(torch.zeros(2, b))
+        attn_energies = Variable(torch.zeros(2, b)).cuda()
         c = torch.cat([context_t.unsqueeze(0),context_a.unsqueeze(0)], 0) #[ 2 x b x dense*2]
         representation_hiddens,_ =  self.gru_v(c,hidden_c)   #[2 x b x dense*2]
 
@@ -127,5 +127,5 @@ class Attndecoder(nn.Module):
         
         return S_t, attn_dist
     def init_hidden(self):
-        hidden_c = Variable(torch.zeros(2,5,self.hidden_size ))
+        hidden_c = Variable(torch.zeros(2,5,self.hidden_size )).cuda()
         return hidden_c
