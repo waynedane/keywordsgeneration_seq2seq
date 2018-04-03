@@ -20,6 +20,7 @@ Batch_Size = 64
 n_layers =1
 teacher_forcing_ratio =0.1
 clip = 2.0
+learning_rate = 0.0001
 
 with open("dataset/word2index.pkl",'rb') as f:
     dic = pickle.load(f)
@@ -50,7 +51,6 @@ def train(
     decoder_optimizer.zero_grad()
     
     loss= 0
-    word_padding_masking = Variable(seq_mask(data))
     input_variable = Variable(unk(data))# input data for the model
     target_unk = unk(target)
     target_variable = Variable(target) # label
@@ -85,3 +85,60 @@ def train(
               
               return loss.data[0]/target_length
  
+# Initialize models
+embedder = EmbeddingMatrix(Vocab_Size, Embedding_Size).cuda()
+encoder = EncoderRNN(Embedding_Size, Hidden_Size, Batch_Size).cuda()
+decoder = AttnDecoderRNN(Embedding_Size, Hidden_Size, Vocab_Size, Extend_Vocab_Size, Batch_Size, dropout_p=0.1).cuda()
+
+embedder_optimzier = optim.Adam(embedder.parameters(),lr = learning_rate)
+encoder_optimzier = optim.Adam(encoder.parameters(),lr = learning_rate)
+decoder_optimzier = optim.Adam(decoder.parameters(),lr = learning_rate)
+criterion = nn.NLLLoss
+
+#configring traing
+
+n_epcochs = 10000
+plot_every = 200
+print_every = 1000
+
+plot_losses =[]
+print_loss_total = 0
+plot_loss_total = 0
+#begin
+loss_list=[]
+mydataset =  KP20K('dataset',1,True)
+train_loader = data.DataLoader(dataset=mydataset,
+                                           batch_size=Batch_Size,
+                                           shuffle=True,
+                                           num_workers=2)
+
+for epoch in range(1,n_epcochs+1):
+
+    for batch_index , (data, target) in enumerate(train_loader):
+#loading training data
+
+        data = data.cuda()
+
+
+        words_padding_mask = seq_mask(data).cuda()
+        target = target.cuda()
+        loss = train(
+                     data, target, words_padding_mask,
+                     embedder, encoder, decoder ,embedder_optimzier,
+                     encoder_optimzier, decoder_optimzier, criterion)
+
+        print_loss_total += loss.data[0]
+        plot_loss_total += loss.data[0]
+        if epoch == 0: continue
+
+        if epoch%print_every == 0:
+            print_loss_avg = print_loss_total / print_every
+            loss_list.append(print_loss_avg)
+            print(print_loss_avg)
+
+    if epoch % plot_every == 0:
+        plot_loss_avg = plot_loss_total / plot_every
+        plot_losses.append(plot_loss_avg)
+        plot_loss_total = 0
+    if epoch %1000 == 0:
+        torch.save({'encoder': encoder, 'decoder': decoder, }, 'model.t7'+str(epoch))
