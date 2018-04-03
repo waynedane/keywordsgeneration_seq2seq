@@ -10,7 +10,7 @@ import pickle
 
 from model import EmbeddingMatrix,EncoderRNN, AttnDecoderRNN
 from kp20k import KP20K
-from functions import seq_mask
+from functions import seq_mask, atten_re
 
 #Constants
 Vocab_Size = 50000
@@ -50,7 +50,7 @@ def train(
     decoder_optimizer.zero_grad()
     
     loss= 0
-    
+    word_padding_masking = Variable(seq_mask(data))
     input_variable = Variable(unk(data))# input data for the model
     target_unk = unk(target)
     target_variable = Variable(target) # label
