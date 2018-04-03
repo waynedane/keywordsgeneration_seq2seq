@@ -18,7 +18,7 @@ Hidden_Size= 128
 Embedding_Size = 128
 Batch_Size = 64
 n_layers =1
-teacher_forcing_ratio =0.5
+teacher_forcing_ratio =0.1
 clip = 2.0
 
 with open("dataset/word2index.pkl",'rb') as f:
