@@ -7,6 +7,8 @@ import torch.utils.data as data
 import numpy as np
 import random
 import pickle
+import time
+import math
 
 from model import EmbeddingMatrix,EncoderRNN, AttnDecoderRNN
 from kp20k import KP20K
@@ -30,6 +32,18 @@ with open("dataset/word2index_extend.pkl",'rb') as f1:
     oovs = pickle.load(f1)
     Extend_Vocab_Size = len(oovs)+Vocab_Size
     
+def as_minutes(s):
+    m = math.floor(s / 60)
+    s -= m * 60
+    return '%dm %ds' % (m, s)
+
+def time_since(since, percent):
+    now = time.time()
+    s = now - since
+    es = s / (percent)
+    rs = es - s
+    return '%s (- %s)' % (as_minutes(s), as_minutes(rs))
+
 def unk(d):
     size = d.size()
     unk_l = []
@@ -97,7 +111,7 @@ criterion = nn.NLLLoss
 
 #configring traing
 
-n_epcochs = 10000
+n_epochs = 10000
 plot_every = 200
 print_every = 1000
 
@@ -105,6 +119,7 @@ plot_losses =[]
 print_loss_total = 0
 plot_loss_total = 0
 #begin
+start = time.time()
 loss_list=[]
 mydataset =  KP20K('dataset',1,True)
 train_loader = data.DataLoader(dataset=mydataset,
@@ -112,7 +127,7 @@ train_loader = data.DataLoader(dataset=mydataset,
                                            shuffle=True,
                                            num_workers=2)
 
-for epoch in range(1,n_epcochs+1):
+for epoch in range(1,n_epochs+1):
 
     for batch_index , (data, target) in enumerate(train_loader):
 #loading training data
@@ -124,21 +139,22 @@ for epoch in range(1,n_epcochs+1):
         target = target.cuda()
         loss = train(
                      data, target, words_padding_mask,
-                     embedder, encoder, decoder ,embedder_optimzier,
+                     embedder.train(), encoder.train(), decoder.train(), embedder_optimzier,
                      encoder_optimzier, decoder_optimzier, criterion)
 
         print_loss_total += loss.data[0]
         plot_loss_total += loss.data[0]
         if epoch == 0: continue
+    if epoch%print_every == 0:
+        print_loss_avg = print_loss_total / print_every
+        loss_list.append(print_loss_avg)
+        print_summary = '%s (%d %d%%) %.4f' % (time_since(start, epoch / n_epochs), epoch, epoch / n_epochs * 100, print_loss_avg)
+        print(print_summary)
 
-        if epoch%print_every == 0:
-            print_loss_avg = print_loss_total / print_every
-            loss_list.append(print_loss_avg)
-            print(print_loss_avg)
 
     if epoch % plot_every == 0:
         plot_loss_avg = plot_loss_total / plot_every
         plot_losses.append(plot_loss_avg)
         plot_loss_total = 0
     if epoch %1000 == 0:
-        torch.save({'encoder': encoder, 'decoder': decoder, }, 'model.t7'+str(epoch))
+        torch.save({'embedder':embedder,'encoder': encoder, 'decoder': decoder}, 'model.t7'+str(epoch))
