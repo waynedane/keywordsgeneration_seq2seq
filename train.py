@@ -85,7 +85,7 @@ def train(
             decoder_input = embedder(Variable(target_unk[di]))
      else:
           for di in range(target_length):
-              S_t, renorm_attns, final_output = decoder(data, words_padding_mask, decoder_input, S_t, outputs_t, outputs_a)
+              S_t, renorm_attns, final_output = decoder(data, words_padding_mask, decoder_input, si.unsqueeze(0), outputs_t, outputs_a)
               loss += criterion(final_output,target_variable[di])
 
               topv, topi = final_output.data.topk(1)
@@ -102,7 +102,7 @@ def train(
 # Initialize models
 embedder = EmbeddingMatrix(Vocab_Size, Embedding_Size).cuda()
 encoder = EncoderRNN(Embedding_Size, Hidden_Size, Batch_Size).cuda()
-decoder = AttnDecoderRNN(Embedding_Size, Hidden_Size, Vocab_Size, Extend_Vocab_Size, Batch_Size, dropout_p=0.1).cuda()
+decoder = AttnDecoderRNN(Embedding_Size, Batch_Size, Hidden_Size, Vocab_Size, Extend_Vocab_Size,  dropout_p=0.1).cuda()
 
 embedder_optimzier = optim.Adam(embedder.parameters(),lr = learning_rate)
 encoder_optimzier = optim.Adam(encoder.parameters(),lr = learning_rate)
