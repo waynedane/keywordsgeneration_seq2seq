@@ -19,7 +19,7 @@ class EmbeddingMatrix(nn.Module):
         return embedded_inputs
     
 class EncoderRNN(nn.Module):
-    def __init__(self, embedding_size, hidden_size, batch_size):
+    def __init__(self, embedding_size, hidden_size):
         super(EncoderRNN, self).__init__()
         self.embedding_size = embedding_size
         self.hidden_size = hidden_size
@@ -28,15 +28,15 @@ class EncoderRNN(nn.Module):
         self.w_t = nn.Linear(hidden_size*2, hidden_size)
         self.w_a = nn.Linear(hidden_size*2, hidden_size)
         self.v_c = nn.Linear(hidden_size, hidden_size)
-        self.batch_size = batch_size
     def forward(self, embedded_inputs, hidden_t, hidden_a):  # 前向传播，两个输入：输入序列和隐层状态
         output_t , hidden_t = self.gru_t(embedded_inputs[:MAX_Length_t], hidden_t) #[length x batch x dense*2]
         output_a , hidden_a = self.gru_a(embedded_inputs[MAX_Length_t:], hidden_a) #[length x batch x dense*2]
         s_0 = self.v_c(self.w_t(output_t[-1])+self.w_a(output_a[-1]))  #[batch x dense]
         return output_t, output_a, output_t[-1].unsqueeze(0), output_a[-1].unsqueeze(0), s_0
-    def init_hidden(self):
-        hidden_t = Variable(torch.zeros(2, self.batch_size, self.hidden_size)).cuda()  # 初始化隐层参数
-        hidden_a = Variable(torch.zeros(2, self.batch_size, self.hidden_size)).cuda()
+    def init_hidden(self, embedded_inputs):
+        batch_size = embedded_inputs.size()[1]
+        hidden_t = Variable(torch.zeros(2, batch_size, self.hidden_size)).cuda()  # 初始化隐层参数
+        hidden_a = Variable(torch.zeros(2, batch_size, self.hidden_size)).cuda()
         return hidden_t, hidden_a
     
 class AttnNN(nn.Module):
@@ -104,14 +104,13 @@ class AttnNN(nn.Module):
         
 
 class Attndecoder(nn.Module):
-    def __init__(self,  embedding_size, batch_size, hidden_size, vocab_size, extend_vocab_size, dropout_p=0.1):
+    def __init__(self,  embedding_size, hidden_size, vocab_size, extend_vocab_size, dropout_p=0.1):
         super(Attndecoder, self).__init__()
         self.hidden_size = hidden_size
         self.vocab_size = vocab_size
         self.extend_vocab_size = extend_vocab_size
         self.dropout_p = dropout_p
         self.embedding_size = embedding_size
-        self.batch_size = batch_size
         self.gru = nn.GRU(embedding_size, hidden_size, dropout=dropout_p)
       
         self.V1 = nn.Linear(hidden_size * 3, hidden_size * 2)
@@ -144,7 +143,8 @@ class Attndecoder(nn.Module):
         attn_dists_projecteds = torch.stack([torch.mul(1-p_gen,attn_dists_projected) for (p_gen, attn_dists_projected) in zip(p_gens,attn_dists_projected)])
         final_output = F.log_softmax(vocab_dists_extended+attn_dists_projecteds, dim=1)
         return S_t, attn_dist, final_output
-    def init_hidden(self):
-        hidden_c = Variable(torch.zeros(2,self.batch_size,self.hidden_size ))
+    def init_hidden(self, target_input):
+        batch_size = target_input.size()[1]
+        hidden_c = Variable(torch.zeros(2,batch_size,self.hidden_size ))
         return hidden_c
 
