@@ -49,7 +49,7 @@ class EncoderRNN(nn.Module):
         output_t , hidden_t = self.gru_t(embedded_inputs_ti, hidden_t) #[length x batch x dense*2]
         output_a , hidden_a = self.gru_a(embedded_inputs_te, hidden_a) #[length x batch x dense*2]
         s_0 = self.v_c(self.w_t(output_t[-1])+self.w_a(output_a[-1]))  #[batch x dense]
-        return output_t, output_a, output_t[-1].unsqueeze(0), output_a[-1].unsqueeze(0), s_0
+        return output_t, output_a, output_t[-1].unsqueeze(0), output_a[-1].unsqueeze(0), s_0.unsqueeze(0)
     def init_hidden(self, embedded_inputs_ti):
         batch_size = embedded_inputs_ti.size()[1]
         hidden_t = Variable(torch.zeros(2, batch_size, self.hidden_size)).cuda()  # 初始化隐层参数
