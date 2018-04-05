@@ -161,7 +161,7 @@ class Attndecoder(nn.Module):
         final_output = F.log_softmax(vocab_dists_extended+attn_dists_projecteds, dim=1)
         return S_t, attn_dist, final_output
     def init_hidden(self, target_input):
-        batch_size = target_input.size()[1]
+        batch_size = target_input.size()[0]
         hidden_c = Variable(torch.zeros(2,batch_size,self.hidden_size ))
         return hidden_c
 
