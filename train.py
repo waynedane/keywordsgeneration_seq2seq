@@ -68,13 +68,14 @@ def train(
     
     input_variable_ti = Variable(unk(title))# input title data for the model
     input_variable_te = Variable(unk(text))
+    target = target.transpose(0,1)
     target_unk = unk(target)
     target_variable = Variable(target) # label
     target_unk_variable = Variable(target_unk) #groud truth for teacher forcing 
         
     input_embedded_ti = embedder(input_variable_ti)
     input_embedded_te = embedder(input_variable_te)
-    target_length = target.size()[1]
+    target_length = target.size()[0]
     hidden_t, hidden_a = encoder.init_hidden(title)
     outputs_t, outputs_a, hidden_t, hidden_a, s_t = encoder(input_embedded_ti, input_embedded_te, hidden_t,hidden_a)
     decoder_input = embedder(Variable(torch.from_numpy(np.ones([Batch_Size,1],'int64')).cuda()))
