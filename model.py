@@ -19,6 +19,11 @@ class EmbeddingMatrix(nn.Module):
         return embedded_inputs
     
 class EncoderRNN(nn.Module):
+    '''
+    args:
+        embedding_size: dim of input 
+        hidden_size: dim of encoder's hidden
+    '''
     def __init__(self, embedding_size, hidden_size):
         super(EncoderRNN, self).__init__()
         self.embedding_size = embedding_size
@@ -28,12 +33,24 @@ class EncoderRNN(nn.Module):
         self.w_t = nn.Linear(hidden_size*2, hidden_size)
         self.w_a = nn.Linear(hidden_size*2, hidden_size)
         self.v_c = nn.Linear(hidden_size, hidden_size)
-    def forward(self, embedded_inputs, hidden_t, hidden_a):  # 前向传播，两个输入：输入序列和隐层状态
-        output_t , hidden_t = self.gru_t(embedded_inputs[:MAX_Length_t], hidden_t) #[length x batch x dense*2]
-        output_a , hidden_a = self.gru_a(embedded_inputs[MAX_Length_t:], hidden_a) #[length x batch x dense*2]
+    '''
+    input:
+        embedded_inputs_ti: title embedding[title_length x batch_size x dense]
+        embedded_inputs_te: text embedding[text_length x batch_size x dense]
+        hidden_t: init hidden of title encoder
+        hiiden_a: init hidden of text encoder
+        
+    output:
+        output_t: output of title encoder[title_length x batch_size x hidden_size]
+        output_a: output of title encoder[text_length x batch_size x hidden_size]
+        s_0: init hidden of decoder [batch_size x dense]
+    '''
+    def forward(self, embedded_inputs_ti, embedded_inputs_te, hidden_t, hidden_a):  # 前向传播，两个输入：输入序列和隐层状态
+        output_t , hidden_t = self.gru_t(embedded_inputs_ti, hidden_t) #[length x batch x dense*2]
+        output_a , hidden_a = self.gru_a(embedded_inputs_te, hidden_a) #[length x batch x dense*2]
         s_0 = self.v_c(self.w_t(output_t[-1])+self.w_a(output_a[-1]))  #[batch x dense]
         return output_t, output_a, output_t[-1].unsqueeze(0), output_a[-1].unsqueeze(0), s_0
-    def init_hidden(self, embedded_inputs):
+    def init_hidden(self, embedded_inputs_ti):
         batch_size = embedded_inputs.size()[1]
         hidden_t = Variable(torch.zeros(2, batch_size, self.hidden_size)).cuda()  # 初始化隐层参数
         hidden_a = Variable(torch.zeros(2, batch_size, self.hidden_size)).cuda()
