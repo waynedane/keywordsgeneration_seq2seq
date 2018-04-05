@@ -51,7 +51,7 @@ class EncoderRNN(nn.Module):
         s_0 = self.v_c(self.w_t(output_t[-1])+self.w_a(output_a[-1]))  #[batch x dense]
         return output_t, output_a, output_t[-1].unsqueeze(0), output_a[-1].unsqueeze(0), s_0
     def init_hidden(self, embedded_inputs_ti):
-        batch_size = embedded_inputs.size()[1]
+        batch_size = embedded_inputs_ti.size()[1]
         hidden_t = Variable(torch.zeros(2, batch_size, self.hidden_size)).cuda()  # 初始化隐层参数
         hidden_a = Variable(torch.zeros(2, batch_size, self.hidden_size)).cuda()
         return hidden_t, hidden_a
