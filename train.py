@@ -134,13 +134,18 @@ for epoch in range(1,n_epochs+1):
 #loading training data
 
         data = data.cuda()
-
-
-        words_padding_mask = seq_mask(data).cuda()
+        title = data[:,:20] #get title
+        text = data[:,20:]  #get text
+        max_l_ti = torch.nonzero(title).max() # get the max_length of tile of this batch
+        max_l_te = torch.nonzero(text).max() # get the max_length of text of this batch
+        title = title[:,:max_l_ti+1]
+        text = text[:,:max_l_te+1]
+        new_batch = torch.cat((title,text),dim=1)
+        words_padding_mask = seq_mask(new_batch).cuda()
         target = target.cuda()
         loss = train(
-                     data, target, words_padding_mask,
-                     embedder.train(), encoder.train(), decoder.train(), embedder_optimzier,
+                     title, text, new_batch, target, words_padding_mask,
+                     embedder, encoder, decoder ,embedder_optimzier,
                      encoder_optimzier, decoder_optimzier, criterion)
 
         print_loss_total += loss.data[0]
