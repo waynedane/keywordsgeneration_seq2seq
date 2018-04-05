@@ -93,7 +93,7 @@ def train(
               loss += criterion(final_output,target_variable[di])
 
               topv, topi = final_output.data.topk(1)
-              decoder_input = Variable(embedder(unk(topi)))
+              decoder_input = embedder(unk(Variable(topi)))
               loss.backward()
               torch.nn.utils.clip_grad_norm(encoder.parameters(), clip)
               torch.nn.utils.clip_grad_norm(decoder.parameters(), clip)
