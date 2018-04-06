@@ -80,7 +80,10 @@ class AttnNN(nn.Module):
         attn_energies_t = Variable(torch.zeros(seq_len_t, b)).cuda()
         attn_energies_a = Variable(torch.zeros(seq_len_a, b)).cuda()
         
-
+        atten_t_1 =self.Wh_t(outputs_t.contiguous().view(-1, self.hidden_size*2))+Ws_t(d_hidden.repeat(seq_len_t,1))
+        atten_t_1 = self.v_t(F.tanh(atten_t_1))
+        attn_energies_t = F.softmax(atten_t_1.view(seq_len_t,b).transpose(0,1),dim=1)
+        '''
         for i in range(seq_len_t):
             atten_t_1 = self.Wh_t(outputs_t[i]) + self.Ws_t(
                 d_hidden)
@@ -95,7 +98,7 @@ class AttnNN(nn.Module):
             atten_a_2 = self.v_a(F.softplus(atten_a_1))
             attn_energies_a[j] = atten_a_2
         attn_energies_a = F.softmax(attn_energies_a.transpose(0, 1), dim=1)
-
+         '''
 
         context_t = torch.bmm(attn_energies_t.unsqueeze(1), outputs_t.transpose(1,0))
         context_a = torch.bmm(attn_energies_a.unsqueeze(1), outputs_a.transpose(1,0))
