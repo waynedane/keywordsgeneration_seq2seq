@@ -67,7 +67,7 @@ def train(
     
     input_variable_ti = Variable(unk(title))# input title data for the model
     input_variable_te = Variable(unk(text))
-    target = target
+    target = target.transpose(0,1)
     target_unk = unk(target)
     target_variable = Variable(target) # label
     target_unk_variable = Variable(target_unk) #groud truth for teacher forcing 
@@ -80,15 +80,15 @@ def train(
     decoder_input = embedder(Variable(torch.from_numpy(np.ones([Batch_Size,1],'int64')).cuda()))
     
     use_teacher_forcing= random.random()< teacher_forcing_ratio
-    hidden_c = decoder.init_hidden(target)
+    hidden_c = decoder.init_hidden(input_embedded_te)
     if use_teacher_forcing:
         for di in range(target_length):
-            s_t, renorm_attns, final_output = decoder(data, words_padding_mask, decoder_input, s_t, outputs_t, outputs_a,hidden_c)
+            s_t, renorm_attns, final_output = decoder(new_batch, words_padding_mask, decoder_input, s_t, outputs_t, outputs_a,hidden_c)
             loss += criterion(final_output,target_variable[di])
             decoder_input = embedder(Variable(target_unk[di]))
      else:
           for di in range(target_length):
-              s_t, renorm_attns, final_output = decoder(data, words_padding_mask, decoder_input, s_t, outputs_t, outputs_a)
+              s_t, renorm_attns, final_output = decoder(new_batch, words_padding_mask, decoder_input, s_t, outputs_t, outputs_a)
               loss += criterion(final_output,target_variable[di])
 
               topv, topi = final_output.data.topk(1)
