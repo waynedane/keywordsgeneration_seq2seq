@@ -54,7 +54,7 @@ def unk(d):
             else:
                 unk_l.append(i)
     target_unk = torch.LongTensor(unk_l).contigous().view(size)
-    return target_unk
+    return target_unk.cuda()
     
 def train(
         title,text , words_padding_mask, target, embedder, encoder, decoder ,embedder_optimzier,
@@ -93,7 +93,7 @@ def train(
               loss += criterion(final_output,target_variable[di])
 
               topv, topi = final_output.data.topk(1)
-              decoder_input = embedder(unk(Variable(topi)))
+              decoder_input = embedder(Variable(unk(topi)))
               loss.backward()
               torch.nn.utils.clip_grad_norm(encoder.parameters(), clip)
               torch.nn.utils.clip_grad_norm(decoder.parameters(), clip)
