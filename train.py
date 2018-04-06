@@ -16,10 +16,9 @@ from functions import seq_mask, atten_re
 
 #Constants
 Vocab_Size = 50000
-Hidden_Size= 128
-Embedding_Size = 128
+Hidden_Size= 256
+Embedding_Size = 256
 Batch_Size = 64
-n_layers =1
 teacher_forcing_ratio =0.1
 clip = 2.0
 learning_rate = 0.0001
