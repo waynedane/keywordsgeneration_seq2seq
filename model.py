@@ -137,7 +137,7 @@ class Attndecoder(nn.Module):
         self.wx = nn.Linear(embedding_size, 1)
         
         self.attn = AttnNN(hidden_size)
-    def forward(self, data_input, target_input, words_padding_mask, hidden ,outputs_t, outputs_a,hidden_c):
+    def forward(self, newbatch, target_input, words_padding_mask, hidden ,outputs_t, outputs_a,hidden_c):
         l_t, b,_= outputs_t.size()  # get length_t &batch size
         l_a = outputs_a.size()[0]
         S_t, hidden = self.gru(target_input, hidden)
@@ -156,7 +156,7 @@ class Attndecoder(nn.Module):
         extra_zeros = Variable(torch.zeros(b, self.extend_vocab_size-self.vocab_size))
         vocab_dists_extended = torch.cat([vocab_dists, extra_zeros], 1)
         renorm_attns = atten_re(attn_dist, Variable(words_padding_mask))
-        attn_dists_projected = Variable(torch.stack([torch.sparse.FloatTensor(i.unsqueeze(0), v, torch.Size([self.extend_vocab_size])).to_dense() for (i,v) in zip(data_input,renorm_attns.data)]))
+        attn_dists_projected = Variable(torch.stack([torch.sparse.FloatTensor(i.unsqueeze(0), v, torch.Size([self.extend_vocab_size])).to_dense() for (i,v) in zip(newbatch,renorm_attns.data)]))
         attn_dists_projecteds = torch.stack([torch.mul(1-p_gen,attn_dists_projected) for (p_gen, attn_dists_projected) in zip(p_gens,attn_dists_projected)])
         final_output = F.log_softmax(vocab_dists_extended+attn_dists_projecteds, dim=1)
         return S_t, attn_dist, final_output
