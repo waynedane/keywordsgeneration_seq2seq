@@ -67,7 +67,7 @@ def train(
     
     input_variable_ti = Variable(unk(title))# input title data for the model
     input_variable_te = Variable(unk(text))
-    target = target.transpose(0,1)
+    target = target
     target_unk = unk(target)
     target_variable = Variable(target) # label
     target_unk_variable = Variable(target_unk) #groud truth for teacher forcing 
