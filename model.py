@@ -77,12 +77,16 @@ class AttnNN(nn.Module):
         seq_len_t = len(outputs_t) # obtain  sequence length of title
         seq_len_a = len(outputs_a) # obtain  sequence length of abstract
 
-        attn_energies_t = Variable(torch.zeros(seq_len_t, b)).cuda()
-        attn_energies_a = Variable(torch.zeros(seq_len_a, b)).cuda()
+        #attn_energies_t = Variable(torch.zeros(seq_len_t, b)).cuda()
+        #attn_energies_a = Variable(torch.zeros(seq_len_a, b)).cuda()
         
-        atten_t_1 =self.Wh_t(outputs_t.contiguous().view(-1, self.hidden_size*2))+Ws_t(d_hidden.repeat(seq_len_t,1))
-        atten_t_1 = self.v_t(F.tanh(atten_t_1))
-        attn_energies_t = F.softmax(atten_t_1.view(seq_len_t,b).transpose(0,1),dim=1)
+        atten_1 =self.Wh_t(outputs_t.contiguous().view(-1, self.hidden_size*2))+Ws_t(d_hidden.repeat(seq_len_t,1))
+        atten_1 = self.v_t(F.tanh(atten_1))
+        attn_energies_t = F.softmax(atten_1.view(seq_len_t,b).transpose(0,1),dim=1)
+        
+        atten_2 =self.Wh_t(outputs_a.contiguous().view(-1, self.hidden_size*2))+Ws_a(d_hidden.repeat(seq_len_a,1))
+        atten_2 = self.v_a(F.tanh(atten_2))
+        attn_energies_a = F.softmax(atten_2.view(seq_len_a,b).transpose(0,1),dim=1)
         '''
         for i in range(seq_len_t):
             atten_t_1 = self.Wh_t(outputs_t[i]) + self.Ws_t(
@@ -109,12 +113,17 @@ class AttnNN(nn.Module):
         attn_energies = Variable(torch.zeros(2, b)).cuda()
         c = torch.cat([context_t.unsqueeze(0),context_a.unsqueeze(0)], 0) #[ 2 x b x dense*2]
         representation_hiddens,_ =  self.gru_v(c,hidden_c)   #[2 x b x dense*2]
-
+        
+        atten = self.wt(representation_hiddens.contiguous().view(-1,self.hidden_size*2))+ws(d_hidden.repeat(2,1))
+        atten = self.v(F.tanh(attnen))
+        attn_energies = F.softmax(atten.view(2,b)trasnpose(0,1),dim=1)
+        '''
         for i in range(2):
             attn_1 = self.wt(representation_hiddens[i]) + self.ws(d_hidden)
             attn_2 = self.v(F.tanh(attn_1))
             attn_energies[i] = attn_2
         attn_energies = F.softmax(attn_energies.transpose(0, 1), dim=1) #[b x2]
+        '''
         context_vector = torch.bmm(attn_energies.unsqueeze(1),representation_hiddens.transpose(0,1)).squeeze() #[b x 1 x 2] x[b x 2 x dense*2] = [b x 1 x dense*2]
             
 
