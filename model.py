@@ -115,7 +115,7 @@ class AttnNN(nn.Module):
         representation_hiddens,_ =  self.gru_v(c,hidden_c)   #[2 x b x dense*2]
         
         atten = self.wt(representation_hiddens.contiguous().view(-1,self.hidden_size*2))+ws(d_hidden.repeat(2,1))
-        atten = self.v(F.tanh(attnen))
+        atten = self.v(F.tanh(atten))
         attn_energies = F.softmax(atten.view(2,b)trasnpose(0,1),dim=1)
         '''
         for i in range(2):
