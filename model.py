@@ -73,18 +73,20 @@ class AttnNN(nn.Module):
 
 
     def forward(self, d_hidden, outputs_t, outputs_a, hidden_c):
-        b = outputs_t.size()[1]  # obtain mini batch
-        seq_len_t = len(outputs_t) # obtain  sequence length of title
-        seq_len_a = len(outputs_a) # obtain  sequence length of abstract
+            
+        seq_len_t,b,hidden_size_t = outputs_t.size()
+        seq_len_a,b_a,hidden_size_a = outputs_a.size()
+        #seq_len_t = len(outputs_t) # obtain  sequence length of title
+        #seq_len_a = len(outputs_a) # obtain  sequence length of abstract
 
         #attn_energies_t = Variable(torch.zeros(seq_len_t, b)).cuda()
         #attn_energies_a = Variable(torch.zeros(seq_len_a, b)).cuda()
         
-        atten_1 =self.Wh_t(outputs_t.contiguous().view(-1, self.hidden_size*2))+Ws_t(d_hidden.repeat(seq_len_t,1))
+        atten_1 =self.Wh_t(outputs_t.contiguous().view(-1, hidden_size_t))+Ws_t(d_hidden.repeat(seq_len_t,1))
         atten_1 = self.v_t(F.tanh(atten_1))
         attn_energies_t = F.softmax(atten_1.view(seq_len_t,b).transpose(0,1),dim=1)
         
-        atten_2 =self.Wh_t(outputs_a.contiguous().view(-1, self.hidden_size*2))+Ws_a(d_hidden.repeat(seq_len_a,1))
+        atten_2 =self.Wh_t(outputs_a.contiguous().view(-1, hidden_size_a))+Ws_a(d_hidden.repeat(seq_len_a,1))
         atten_2 = self.v_a(F.tanh(atten_2))
         attn_energies_a = F.softmax(atten_2.view(seq_len_a,b).transpose(0,1),dim=1)
         '''
@@ -113,8 +115,9 @@ class AttnNN(nn.Module):
         attn_energies = Variable(torch.zeros(2, b)).cuda()
         c = torch.cat([context_t.unsqueeze(0),context_a.unsqueeze(0)], 0) #[ 2 x b x dense*2]
         representation_hiddens,_ =  self.gru_v(c,hidden_c)   #[2 x b x dense*2]
+        r_hidden_size = representation_hiddens.size()[2]
         
-        atten = self.wt(representation_hiddens.contiguous().view(-1,self.hidden_size*2))+ws(d_hidden.repeat(2,1))
+        atten = self.wt(representation_hiddens.contiguous().view(-1,r_hidden_size))+ws(d_hidden.repeat(2,1))
         atten = self.v(F.tanh(atten))
         attn_energies = F.softmax(atten.view(2,b)trasnpose(0,1),dim=1)
         '''
