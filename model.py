@@ -82,11 +82,11 @@ class AttnNN(nn.Module):
         #attn_energies_t = Variable(torch.zeros(seq_len_t, b)).cuda()
         #attn_energies_a = Variable(torch.zeros(seq_len_a, b)).cuda()
         
-        atten_1 =self.Wh_t(outputs_t.contiguous().view(-1, hidden_size_t))+Ws_t(d_hidden.repeat(seq_len_t,1))
+        atten_1 =self.Wh_t(outputs_t.contiguous().view(-1, hidden_size_t))+self.Ws_t(d_hidden.repeat(seq_len_t,1))
         atten_1 = self.v_t(F.tanh(atten_1))
         attn_energies_t = F.softmax(atten_1.view(seq_len_t,b).transpose(0,1),dim=1)
         
-        atten_2 =self.Wh_t(outputs_a.contiguous().view(-1, hidden_size_a))+Ws_a(d_hidden.repeat(seq_len_a,1))
+        atten_2 =self.Wh_t(outputs_a.contiguous().view(-1, hidden_size_a))+self.Ws_a(d_hidden.repeat(seq_len_a,1))
         atten_2 = self.v_a(F.tanh(atten_2))
         attn_energies_a = F.softmax(atten_2.view(seq_len_a,b).transpose(0,1),dim=1)
         '''
@@ -117,7 +117,7 @@ class AttnNN(nn.Module):
         representation_hiddens,_ =  self.gru_v(c,hidden_c)   #[2 x b x dense*2]
         r_hidden_size = representation_hiddens.size()[2]
         
-        atten = self.wt(representation_hiddens.contiguous().view(-1,r_hidden_size))+ws(d_hidden.repeat(2,1))
+        atten = self.wt(representation_hiddens.contiguous().view(-1,r_hidden_size))+self.ws(d_hidden.repeat(2,1))
         atten = self.v(F.tanh(atten))
         attn_energies = F.softmax(atten.view(2,b)trasnpose(0,1),dim=1)
         '''
