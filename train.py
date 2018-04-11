@@ -204,5 +204,5 @@ for epoch in range(1,n_epochs+1):
     if epoch %500 == 0:
         torch.save({'embedder':embedder,'encoder': encoder, 'decoder': decoder}, str(epoch)+'model.pkl')
     if epoch %10 == 0:
-        torch.save({'embedder':embedder.state_dict(),'encoder': encoder.state_dict(), 'decoder': decoder.state_dict()},'checkpoint.pkl')
+        torch.save({'embedder':embedder.state_dict(),'encoder': encoder.state_dict(), 'decoder': decoder.state_dict()},'check/checkpoint.pkl')
      
