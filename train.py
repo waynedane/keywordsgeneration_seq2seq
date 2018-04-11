@@ -151,7 +151,7 @@ print_loss_total = 0
 plot_loss_total = 0
 #begin
 loss_list=[]
-mydataset =  KP20K('dataset',1,True)
+mydataset =  KP20K('dataset','small',True)
 train_loader = data.DataLoader(dataset=mydataset,
                                            batch_size=Batch_Size,
                                            shuffle=True,
@@ -204,5 +204,5 @@ for epoch in range(1,n_epochs+1):
     if epoch %500 == 0:
         torch.save({'embedder':embedder,'encoder': encoder, 'decoder': decoder}, str(epoch)+'model.pkl')
     if epoch %10 == 0:
-        torch.save({'embedder':embedder.state_dict(),'encoder': encoder.state_dict(), 'decoder': decoder.state_dict()})
+        torch.save({'embedder':embedder.state_dict(),'encoder': encoder.state_dict(), 'decoder': decoder.state_dict()},str(epoch)+'dict.pkl')
      
