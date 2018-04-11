@@ -5,29 +5,28 @@ import os
 
 
 class KP20K(data.Dataset):
-    def __init__(self, root, part, scale, train=True, entire = False):
+    def __init__(self, root, part, scale, train=True):
         self.root = root
         self.train = train
         self.part = part
         self.scale = scale
-        self.entire = entire
+        
 
         if self.train:
-            if self.entire:
-                tr_d = np.load(
+           
+            tr_d = np.load(
                     os.path.join(root, '1.npy'))
                 
-                tr_d_ =  np.load(
+            tr_d_ =  np.load(
                     os.path.join(root, '2.npy'))
                 
-                tr_d = np.concatenate((tr_d,trd_),axis=0)
-            else:
-                choose = {1: '1.npy', 2: '2.npy'}
-                scale_select = {'50k':240000, '100k':500000,'250k':1130000}
-                tr_d = np.load(
-                    os.path.join(root, choose[self.part]))
-                self.train_data = tr_d[:scale_select[self.scale], :470]
-                self.train_labels = tr_d[:scale_select[self.scale], 470:]
+            tr_d = np.concatenate((tr_d,trd_),axis=0)
+                
+            a= np.random.randint( 0,high = 1000000, size = 1) 
+            a=a[0]
+            scale_select={'large':1000000, 'mid': 500000, 'small': 250000}
+            self.train_data = tr_d[a[0]:a[0+]scale_select[self.scale], :470]
+            self.train_labels = tr_d[:scale_select[self.scale], 470:]
 
             '''
             if self.part == 1:
