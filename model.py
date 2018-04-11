@@ -183,3 +183,45 @@ class AttnDecoderRNN(nn.Module):
         batch_size = new_batch.size()[0]
         hidden_c = Variable(torch.zeros(2, batch_size, self.hidden_size)).cuda()
         return hidden_c
+
+  class seq2seq(nn.module):
+    def __init__(self, embedder, encoder, decoder):
+        super(Seq2Seq, self).__init__()
+        self.embedder = embedder
+        self.encoder = encoder
+        self.decoder = decoder
+    def forward(self, title, label, new_batch, words_padding_mask, learning_rate , clip, teacher_forcing_ratio):
+        title_embedding = embedder(title)
+        label_embedding = embedder(label)
+        target_length, batch_size,_ = label_embedding.size()
+        hidden_t, hidden_a = encoder.init_hidden()
+        output_t, output_a, st = encoder(title_embedding, label_embedding,hidden_t, hidden_a)
+        st = st.unsqueeze(0)
+        decoder_input = Variable(torch.from_numpy(np.ones([batch, 1],'int64')).cuda())
+        decoder_input = embedder(decoder_input)
+        use_teacher_forcing= random.random()< teacher_forcing_ratio
+        hidden_c = decoder.init_hidden(new_batch)
+        outputs = Variable(torch.zeros(target_length, batch_size, vocab_size)).cuda()
+        
+        if use_teacher_forcing:
+            for di in range(target_length):
+                st, renorm_attn, final_output = decoder(new_batch,decoder_input, words_padding_mask, st, outputs_t, outputs_a, hidden_c)
+                outputs[di] =  final_output 
+                decoder_input = embedder(target_unk[di].unsqueeze(1))
+        else:
+            for di in range(target_length):
+                st, renorm_attn, final_output = decoder(new_batch, decoder_input, words_padding_mask,  st, outputs_t, outputs_a, hidden_c)
+                outputs[di] =  final_output 
+                topv, topi = final_output.data.topk(1)
+                decoder_input = embedder(Variable(unk(topi)))
+        
+        return outputs
+        
+        
+        
+        
+    
+    
+    
+    
+    
