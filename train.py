@@ -142,7 +142,7 @@ criterion = nn.NLLLoss().cuda()
 
 #configring traing
 
-n_epochs = 50000
+n_epochs = 5000
 plot_every = 200
 print_every = 1000
 start = time.time()
@@ -155,9 +155,9 @@ mydataset =  KP20K('dataset',1,True)
 train_loader = data.DataLoader(dataset=mydataset,
                                            batch_size=Batch_Size,
                                            shuffle=True,
-                                           num_workers=2)
+                                           num_workers=4)
                                            
-print("data loaded!\ntraining started!")                                           
+print("data loaded!\nstart training!")                                           
 for epoch in range(1,n_epochs+1):
 
     for batch_index , (data, target) in enumerate(train_loader):
@@ -201,5 +201,8 @@ for epoch in range(1,n_epochs+1):
         plot_losses.append(plot_loss_avg)
         plot_loss_total = 0
 
-    if epoch %5000 == 0:
+    if epoch %500 == 0:
         torch.save({'embedder':embedder,'encoder': encoder, 'decoder': decoder}, str(epoch)+'model.pkl')
+    if epoch %10 == 0:
+        torch.save({'embedder':embedder.state_dict(),'encoder': encoder.state_dict(), 'decoder': decoder.state_dict()})
+     
