@@ -25,8 +25,8 @@ class KP20K(data.Dataset):
             a= np.random.randint( 0,high = 1000000, size = 1) 
             a=a[0]
             scale_select={'large':1000000, 'mid': 500000, 'small': 250000}
-            self.train_data = tr_d[a[0]:a[0+]scale_select[self.scale], :470]
-            self.train_labels = tr_d[:scale_select[self.scale], 470:]
+            self.train_data = tr_d[a[0]:a[0]+scale_select[self.scale], :470]
+            self.train_labels = tr_d[a[0]:a[0]+scale_select[self.scale], 470:]
 
             '''
             if self.part == 1:
