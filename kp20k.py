@@ -5,10 +5,9 @@ import os
 
 
 class KP20K(data.Dataset):
-    def __init__(self, root, part, scale, train=True):
+    def __init__(self, root, scale, train=True):
         self.root = root
         self.train = train
-        self.part = part
         self.scale = scale
         
 
