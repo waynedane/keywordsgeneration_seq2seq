@@ -136,8 +136,8 @@ encoder = encoder.cuda()
 decoder = decoder.cuda()
 
 embedder_optimizer = optim.Adam(embedder.parameters(),lr = learning_rate)
-encoder_optimizer = optim.Adam(encoder.parameters(),lr = learning_rate)
-decoder_optimizer = optim.Adam(decoder.parameters(),lr = learning_rate)
+encoder_optimizer = optim.Adam(encoder.parameters(),lr = learning_rate, weight_decay=0.0000001)
+decoder_optimizer = optim.Adam(decoder.parameters(),lr = learning_rate, weight_decay=0.0000001)
 criterion = nn.NLLLoss(ignore_index = 0).cuda()
 
 #configring traing
