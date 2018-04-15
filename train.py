@@ -17,7 +17,7 @@ from functions import seq_mask
 Vocab_Size = 50000
 Hidden_Size= 256
 Embedding_Size = 256
-Batch_Size = 64
+Batch_Size = 32
 teacher_forcing_ratio =0.3
 clip = 2.0
 learning_rate = 0.001
@@ -142,11 +142,12 @@ criterion = nn.NLLLoss(ignore_index = 0).cuda()
 
 #configring traing
 
-n_epochs = 5000
-plot_every = 200
-print_every = 1000
+n_epochs = 40
+plot_every = 2
+print_every = 5
 start = time.time()
 plot_losses =[]
+print_loss = 0
 print_loss_total = 0
 plot_loss_total = 0
 #begin
@@ -185,7 +186,9 @@ for epoch in range(1,n_epochs+1):
 
         print_loss_total += loss
         plot_loss_total += loss
-        print(print_loss_total/(batch_index+1))
+        print_loss  += loss
+    print(print_loss )
+    print_loss = 0
     if epoch == 0: continue
     
     
